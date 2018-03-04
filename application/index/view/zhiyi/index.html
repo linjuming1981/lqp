@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+	<title>苹儿老师的纸艺阁</title>
+	<script src="__STATIC__/sumiao/js/jquery-2.1.1.min.js"></script>
+	<link rel="stylesheet" href="__STATIC__/sumiao/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="__STATIC__/sumiao/css/zzsc-demo.css">
+	<link rel="stylesheet" href="__STATIC__/sumiao/dist/css/swiper.min.css">
+	<link rel="stylesheet" href="__STATIC__/sumiao/css/zhiyi.css?v=3">
+</head>
+<body>
+	<div class="zzsc-container">
+		<div class="container">
+			<div class="row">
+				<div class="col-md-12">
+					<!-- Swiper -->
+					<div class="swiper-container">
+						<div class="swiper-wrapper">
+
+							<div class="swiper-slide">
+								<div class="intro ui-flex">
+									<div class="inner">
+										<img src="__STATIC__/sumiao/images/zhiyi_1.jpg">
+										<h2></h2>
+									</div>
+								</div>
+								<div class="detail">
+								</div>
+								<textarea>
+									<img src="__STATIC__/sumiao/images/zhiyi_1.jpg">
+									<img src="__STATIC__/sumiao/images/zhiyi_2.jpg">
+									<img src="__STATIC__/sumiao/images/zhiyi_3.jpg">
+									<img src="__STATIC__/sumiao/images/zhiyi_4.jpg">
+									<img src="__STATIC__/sumiao/images/zhiyi_5.jpg">
+								</textarea>
+							</div>
+
+							<?php for($i=0;$i<50;$i++){ ?>
+							<div class="swiper-slide">
+								<div class="intro ui-flex">
+									<div class="inner">
+										<img src="">
+										<h2></h2>
+									</div>
+								</div>
+								<div class="detail"></div>
+								<textarea></textarea>
+							</div>
+							<?php } ?>
+							
+						</div>
+					</div>
+				</div>
+				
+			</div>
+		</div>
+	</div>
+	
+	<!-- Swiper JS -->
+	 <script src="__STATIC__/sumiao/dist/js/swiper.min.js"></script>
+	<!-- Initialize Swiper -->
+	<script>
+
+		var art_ajaxing = 0;
+		var articles  = {$list|json_encode};
+		var win_h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+		var article;
+
+		// 屏幕高度
+		$('.intro').height(win_h);
+
+		// 实例化
+		var swiper = new Swiper('.swiper-container',{
+			loop:true
+		});
+
+
+		swiper.on('transitionStart',function(){
+			// console.log(swiper.swipeDirection);
+			// console.log(swiper.realIndex);
+			// console.log(swiper.activeIndex);
+			// console.log(swiper.previousIndex);
+			// console.log(swiper.isBeginning);
+			// console.log(swiper);
+
+			var cur_el = $('.swiper-slide-active');
+			if(swiper.swipeDirection == 'next'){
+				if(swiper.realIndex == 0){
+					cur_el.siblings().attr('seen','');
+				}
+				if(cur_el.attr('seen')==1) return;
+
+				getArticles(function(){
+		  			article = articles.shift();
+					cur_el.find('h2').html(article['title']);
+		  			cur_el.find('img').hide().attr('src', article['cover_img']).fadeIn();
+
+		  			// var detail_el = cur_el.find('.detail');
+		  			// detail_el.html(article['content']);
+		  			// detail_el.find('a').attr('href','javasript:;');
+		  			// detail_el.find('iframe').remove();
+		  			
+		  			var textarea = cur_el.find('textarea');
+		  			textarea.val(article['content']);
+
+		  			cur_el.attr('seen', 1);
+					preLoadImg(articles[0]['cover_img']);
+					preLoadImg(articles[1]['cover_img']);
+		  		});
+			}
+
+		});
+
+		swiper.on('transitionEnd',function(){
+			if(swiper.isBeginning){
+				swiper.slideNext();
+				return;
+			}
+			var cur_el = $('.swiper-slide-active');
+			var nest_els = cur_el.prev().add(cur_el.next());
+			nest_els.find('.intro').show().height(win_h);
+			nest_els.find('.detail').hide();
+		})
+
+		swiper.on('reachBeginning',function(){
+			// swiper.slideTo(0, 1000, false);//切换到第一个slide，速度为1秒
+		});
+
+		swiper.on('tap', function(e){
+			var el = $(e.target);
+			var slide_el = el.closest('.swiper-slide');
+			var detail_el = slide_el.find('.detail');
+			if(detail_el.is(':visible')) return;
+
+
+			slide_el.find('.intro').slideUp();
+
+			detail_el.fadeIn();
+
+			var textarea = slide_el.find('textarea');
+			detail_el.html(textarea.val());
+
+			// if(slide_el.attr('seen')!=1 || !detail_el.html()){
+				// detail_el.html(article['content']);
+				// detail_el.find('a').attr('href','javascript:;');
+				// detail_el.find('iframe').remove();
+			// }
+
+		})
+
+
+		// 获取图片清单
+		function getArticles(fn){
+			if(art_ajaxing || articles.length>=6){
+				if(fn) fn();
+			}else{
+				art_ajaxing = 1;
+				$.ajax({
+					url : "index.php?s=index/zhiyi/getArticleList",
+					success : function(list){
+						art_ajaxing = 0;
+						$.merge(articles, list);
+						if(fn) fn();
+					}
+				})
+			}
+			
+		}
+
+
+		// 图片预加载
+		function preLoadImg(url){
+			var img = new Image();
+			img.src = url;
+		}
+
+	</script>
+</body>
+</html>

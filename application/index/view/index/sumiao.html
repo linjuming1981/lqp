@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> 
+	<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+	<title>苹儿老师的素描本</title>
+	<script src="__STATIC__/sumiao/js/jquery-2.1.1.min.js"></script>
+	<link rel="stylesheet" href="__STATIC__/sumiao/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="__STATIC__/sumiao/css/zzsc-demo.css">
+	<link rel="stylesheet" href="__STATIC__/sumiao/dist/css/swiper.min.css">
+	<link rel="stylesheet" href="__STATIC__/sumiao/css/sumiao.css">
+</head>
+<body>
+	<div class="zzsc-container">
+		<div class="container">
+			<div class="row">
+				<div class="col-md-12">
+					<!-- Swiper -->
+					<div class="swiper-container">
+						<div class="swiper-wrapper">
+
+							<div class="swiper-slide">
+								<div class="inner ui-flex">
+									<img src="__STATIC__/sumiao/images/sumiao.jpg">
+								</div>
+							</div>
+
+							<?php for($i=0;$i<50;$i++){ ?>
+							<div class="swiper-slide">
+								<div class="inner ui-flex">
+									<img src="">
+								</div>
+							</div>
+							<?php } ?>
+							
+						</div>
+					</div>
+				</div>
+				
+			</div>
+		</div>
+	</div>
+	
+	<!-- Swiper JS -->
+	 <script src="__STATIC__/sumiao/dist/js/swiper.min.js"></script>
+	<!-- Initialize Swiper -->
+	<script>
+
+		var img_ajaxing = 0;
+		var imgs  = {$list|json_encode};
+		var win_h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+
+		// 屏幕高度
+		$('.inner').height(win_h);
+
+		// 实例化
+		var swiper = new Swiper('.swiper-container',{
+			loop:true,
+			zoom : true
+		});
+
+
+		swiper.on('transitionStart',function(){
+			// console.log(swiper.swipeDirection);
+			// console.log(swiper.realIndex);
+			// console.log(swiper.activeIndex);
+			// console.log(swiper.previousIndex);
+			// console.log(swiper.isBeginning);
+			// console.log(swiper);
+
+			cur_el = $('.swiper-slide-active');
+			if(swiper.swipeDirection == 'next'){
+				if(swiper.realIndex == 0){
+					cur_el.siblings().attr('seen','');
+				}
+				if(cur_el.attr('seen')==1) return;
+
+				getImgs(function(){
+		  			var img_data = imgs.shift();
+		  			cur_el.find('img').hide().attr('src', img_data['img_url']).fadeIn();
+		  			cur_el.attr('seen', 1);
+					preLoadImg(imgs[0]['img_url']);
+					preLoadImg(imgs[1]['img_url']);
+		  		});
+			}
+
+		});
+
+		swiper.on('transitionEnd',function(){
+			if(swiper.isBeginning){
+				console.log(1);
+				swiper.slideNext();
+			}
+		})
+
+		swiper.on('reachBeginning',function(){
+			// swiper.slideTo(0, 1000, false);//切换到第一个slide，速度为1秒
+		});
+
+
+		// 获取图片清单
+		function getImgs(fn){
+			if(img_ajaxing || imgs.length>=6){
+				if(fn) fn();
+			}else{
+				img_ajaxing = 1;
+				$.ajax({
+					url : "index.php?s=index/index/getSumiaoList",
+					success : function(list){
+						img_ajaxing = 0;
+						$.merge(imgs, list);
+						if(fn) fn();
+					}
+				})
+			}
+			
+		}
+
+
+		// 图片预加载
+		function preLoadImg(url){
+			var img = new Image();
+			img.src = url;
+		}
+
+	</script>
+</body>
+</html>
